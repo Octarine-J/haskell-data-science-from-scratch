@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bbc73da709800950aaaf0bd3cff8caf21ba29a6d4d83ec52667c7f33bed55ce1
+-- hash: 5b479a5a246f00e1dfc53c9b12c9c090efce346e15e4beb9b3b9de5440cb9d3e
 
 name:           data-science
 version:        0.1.0.0
@@ -27,7 +27,7 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Chapters
   other-modules:
       Paths_data_science
   hs-source-dirs:
