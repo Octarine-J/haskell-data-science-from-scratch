@@ -7,11 +7,13 @@ import Utils
 
 insight = do
     users <- readCsvWith parseUser "../data/chapter_1/users.csv"
-    print users
+    putStrLn $ concat ["Users:\n", show users, "\n"]
 
     friendGraph <- readCsvWith parseGraphEdge "../data/chapter_1/friend_graph.csv"
-    let g = toFriendshipsMap friendGraph
-    print g
+    let friendMap = toFriendshipsMap friendGraph
+    putStrLn $ concat ["Friendships:\n", show friendMap, "\n"]
+
+    putStrLn $ concat ["Average number of connections: ", show $ averageNumberOfConnections users friendMap]
 
 
 type UserId = Int
@@ -43,3 +45,12 @@ makeSymmetricEdges ((from, to):xs) = (from, to):(to, from):(makeSymmetricEdges x
 
 toFriendshipsMap :: [(UserId, FriendId)] -> M.Map UserId [FriendId]
 toFriendshipsMap = keyValuesToMap . makeSymmetricEdges
+
+friends :: M.Map UserId [FriendId] -> UserId -> [FriendId]
+friends friendMap userId = M.findWithDefault [] userId friendMap
+
+averageNumberOfConnections :: [User] -> M.Map UserId [FriendId] -> Double
+averageNumberOfConnections users friendMap = totalConnections / numUsers
+    where
+        totalConnections = fromIntegral . sum . map (length . friends friendMap) . map uid $ users
+        numUsers = fromIntegral . length $ users
