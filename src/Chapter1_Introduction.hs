@@ -2,6 +2,7 @@ module Chapter1_Introduction where
 
 import qualified Data.Text as T
 import qualified Data.Map as M
+import Data.List (sortBy)
 import Utils
 
 
@@ -13,7 +14,9 @@ insight = do
     let friendMap = toFriendshipsMap friendGraph
     putStrLn $ concat ["Friendships:\n", show friendMap, "\n"]
 
-    putStrLn $ concat ["Average number of connections: ", show $ averageNumberOfConnections users friendMap]
+    putStrLn $ concat ["Average number of connections: ", show $ averageNumberOfConnections users friendMap, "\n"]
+
+    putStrLn $ concat ["Users sorted by number of friends:\n", show $ usersByNumberOfFriends users friendMap, "\n"]
 
 
 type UserId = Int
@@ -49,8 +52,17 @@ toFriendshipsMap = keyValuesToMap . makeSymmetricEdges
 friends :: M.Map UserId [FriendId] -> UserId -> [FriendId]
 friends friendMap userId = M.findWithDefault [] userId friendMap
 
+numFriends :: M.Map UserId [FriendId] -> UserId -> Int
+numFriends friendMap = length . friends friendMap
+
 averageNumberOfConnections :: [User] -> M.Map UserId [FriendId] -> Double
 averageNumberOfConnections users friendMap = totalConnections / numUsers
     where
-        totalConnections = fromIntegral . sum . map (length . friends friendMap) . map uid $ users
+        totalConnections = fromIntegral . sum . map (numFriends friendMap) . map uid $ users
         numUsers = fromIntegral . length $ users
+
+usersByNumberOfFriends :: [User] -> M.Map UserId [FriendId] -> [(UserId, Int)]
+usersByNumberOfFriends users friendMap = sortBy compareSecondDesc . zip userIds . map (numFriends friendMap) $ userIds
+    where
+        userIds = map uid users
+        compareSecondDesc (_, a) (_, b) = compare b a
