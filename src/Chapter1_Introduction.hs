@@ -17,6 +17,7 @@ insight = do
     putStrLn $ concat ["Average number of connections: ", show $ averageNumberOfConnections users friendMap, "\n"]
 
     putStrLn $ concat ["Users sorted by number of friends:\n", show $ usersByNumberOfFriends users friendMap, "\n"]
+    putStrLn $ concat ["Mutual friends of Chi (id = 3):\n", show $ mutualFriends friendMap 3, "\n"]
 
 
 type UserId = Int
@@ -66,3 +67,12 @@ usersByNumberOfFriends users friendMap = sortBy compareSecondDesc . zip userIds 
     where
         userIds = map uid users
         compareSecondDesc (_, a) (_, b) = compare b a
+
+-- Finds users that have mutual friends with the target user
+-- Output: Map { user_id: num_mutual_friends_with_target_user }
+mutualFriends :: M.Map UserId [FriendId] -> UserId -> M.Map UserId Int
+mutualFriends friendMap targetUserId = counter $ filter notMeNorMyFriend friendsOfMyFriends
+    where
+        friendsOfMyFriends = concat [friends friendMap f | f <- myFriends]
+        notMeNorMyFriend userId = not ((userId `elem` myFriends) || (userId == targetUserId))
+        myFriends = friends friendMap targetUserId

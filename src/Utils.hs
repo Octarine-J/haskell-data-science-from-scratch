@@ -2,7 +2,8 @@ module Utils (
         readCsv, 
         readCsvWith,
         textToInt,
-        keyValuesToMap
+        keyValuesToMap,
+        counter
     ) where
 
 import qualified Data.Map as M
@@ -49,3 +50,11 @@ keyValuesToMap = M.fromList . groupValues
                 accumulateSameKeyValues (key1, value) (key2, values)
                     | key1 == key2 = (key1, value:values)
                     | otherwise = error "Cannot group values for different keys."
+
+-- Counts number of same elements in a list, e.g.
+-- [1, 3, 1, 5, 3, 1] -> Map {1: 3, 3: 2, 5: 1}
+counter :: (Eq k, Ord k) => [k] -> M.Map k Int
+counter = M.fromList . count
+    where
+        count :: (Eq k, Ord k) => [k] -> [(k, Int)]
+        count = map (\xs -> (xs !! 0, length xs)) . groupBy (==) . sort
