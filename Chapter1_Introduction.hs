@@ -7,10 +7,10 @@ import Utils
 
 
 insight = do
-    users <- readCsvWith parseUser "../data/chapter_1/users.csv"
+    users <- readCsvWith parseUser "data/chapter_1/users.csv"
     putStrLn $ concat ["Users:\n", show users, "\n"]
 
-    friendGraph <- readCsvWith parseGraphEdge "../data/chapter_1/friend_graph.csv"
+    friendGraph <- readCsvWith parseGraphEdge "data/chapter_1/friend_graph.csv"
     let friendMap = toFriendshipsMap friendGraph
     putStrLn $ concat ["Friendships:\n", show friendMap, "\n"]
 
