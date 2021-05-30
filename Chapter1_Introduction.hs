@@ -3,6 +3,7 @@ module Chapter1_Introduction where
 import qualified Data.Text as T
 import qualified Data.Map as M
 import Data.List (sortBy)
+import Data.Tuple (swap)
 import Utils
 
 
@@ -11,13 +12,21 @@ insight = do
     putStrLn $ concat ["Users:\n", show users, "\n"]
 
     friendGraph <- readCsvWith parseGraphEdge "data/chapter_1/friend_graph.csv"
-    let friendMap = toFriendshipsMap friendGraph
+    let friendMap = keyValuesToMap . makeSymmetricEdges $ friendGraph
     putStrLn $ concat ["Friendships:\n", show friendMap, "\n"]
+
+    interests <- readCsvWith parseInterest "data/chapter_1/interests.csv"
+    let interestsByUserId = keyValuesToMap interests
+    let userIdsByInterest = keyValuesToMap . map swap $ interests
+    putStrLn $ concat ["Interests by user ID:\n", show interestsByUserId, "\n"]
+    putStrLn $ concat ["User IDs by interest:\n", show userIdsByInterest, "\n"]
 
     putStrLn $ concat ["Average number of connections: ", show $ averageNumberOfConnections users friendMap, "\n"]
 
     putStrLn $ concat ["Users sorted by number of friends:\n", show $ usersByNumberOfFriends users friendMap, "\n"]
     putStrLn $ concat ["Mutual friends of Chi (id = 3):\n", show $ mutualFriends friendMap 3, "\n"]
+
+    putStrLn $ concat ["Data scientists who like Java:\n", show $ M.findWithDefault [] (T.pack "Java") userIdsByInterest, "\n"]
 
 
 type UserId = Int
@@ -40,15 +49,15 @@ parseUser (s_uid:s_name:_) = User {
 parseGraphEdge :: [T.Text] -> (UserId, FriendId)
 parseGraphEdge (s_from:s_to:_) = (textToInt s_from, textToInt s_to)
 
+parseInterest :: [T.Text] -> (UserId, T.Text)
+parseInterest (userId:interest:_) = (textToInt userId, interest) 
+
 -- Explicitly creates backward edges in a non-directional graph
 -- e.g. [(0, 1), (1, 3)] -> [(0, 1), (1, 0), (1, 3), (3, 1)]
 -- Precondition: a graph must not already contain both forward and backward edges
 makeSymmetricEdges :: [(UserId, FriendId)] -> [(UserId, FriendId)]
 makeSymmetricEdges [] = []
 makeSymmetricEdges ((from, to):xs) = (from, to):(to, from):(makeSymmetricEdges xs)
-
-toFriendshipsMap :: [(UserId, FriendId)] -> M.Map UserId [FriendId]
-toFriendshipsMap = keyValuesToMap . makeSymmetricEdges
 
 friends :: M.Map UserId [FriendId] -> UserId -> [FriendId]
 friends friendMap userId = M.findWithDefault [] userId friendMap
@@ -76,3 +85,4 @@ mutualFriends friendMap targetUserId = counter $ filter notMeNorMyFriend friends
         friendsOfMyFriends = concat [friends friendMap f | f <- myFriends]
         notMeNorMyFriend userId = not ((userId `elem` myFriends) || (userId == targetUserId))
         myFriends = friends friendMap targetUserId
+
