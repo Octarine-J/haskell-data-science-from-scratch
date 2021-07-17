@@ -1,31 +1,14 @@
 module Utils (
-        readCsv, 
-        readCsvWith,
         textToInt,
         keyValuesToMap,
-        counter
-    ) where
+        counter,
+        printd
+) where
 
 import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.IO as TextIO
 import Data.List (groupBy, sort)
-
-csvSeparator :: T.Text
-csvSeparator = T.pack ","
-
-readCsvWith :: ([T.Text] -> a) -> String -> IO [a]
-readCsvWith f filename = do
-    csv <- readCsv filename
-    return . map f $ csv
-
-readCsv :: String -> IO [[T.Text]]
-readCsv filename = do
-    content <- TextIO.readFile filename
-    return $ parseCsv content
-
-parseCsv :: T.Text -> [[T.Text]]
-parseCsv = map (T.splitOn csvSeparator) . T.lines
 
 textToInt :: T.Text -> Int
 textToInt = read . T.unpack
@@ -54,7 +37,12 @@ keyValuesToMap = M.fromList . groupValues
 -- Counts number of same elements in a list, e.g.
 -- [1, 3, 1, 5, 3, 1] -> Map {1: 3, 3: 2, 5: 1}
 counter :: (Eq k, Ord k) => [k] -> M.Map k Int
-counter = M.fromList . count
-    where
-        count :: (Eq k, Ord k) => [k] -> [(k, Int)]
-        count = map (\xs -> (xs !! 0, length xs)) . groupBy (==) . sort
+counter = M.fromList . count  where
+    count :: (Eq k, Ord k) => [k] -> [(k, Int)]
+    count = map (\xs -> (head xs, length xs)) . groupBy (==) . sort
+
+printd :: (Show a) => String -> a -> IO ()
+printd label value = do
+    putStrLn label
+    putStrLn $ show value
+    putStrLn ""

@@ -4,29 +4,30 @@ import qualified Data.Text as T
 import qualified Data.Map as M
 import Data.List (sortBy)
 import Data.Tuple (swap)
+import CsvUtils
 import Utils
 
 
 insight = do
     users <- readCsvWith parseUser "data/chapter_1/users.csv"
-    putStrLn $ concat ["Users:\n", show users, "\n"]
+    printd "Users:" users
 
     friendGraph <- readCsvWith parseGraphEdge "data/chapter_1/friend_graph.csv"
-    let friendMap = keyValuesToMap . makeSymmetricEdges $ friendGraph
-    putStrLn $ concat ["Friendships:\n", show friendMap, "\n"]
+    let friendMap = keyValuesToMap . mirrorEdges $ friendGraph
+    printd "Friendships:" friendMap
 
     interests <- readCsvWith parseInterest "data/chapter_1/interests.csv"
     let interestsByUserId = keyValuesToMap interests
     let userIdsByInterest = keyValuesToMap . map swap $ interests
-    putStrLn $ concat ["Interests by user ID:\n", show interestsByUserId, "\n"]
-    putStrLn $ concat ["User IDs by interest:\n", show userIdsByInterest, "\n"]
+    printd "Interests by user ID:" interestsByUserId
+    printd "User IDs by interest:" userIdsByInterest
 
-    putStrLn $ concat ["Average number of connections: ", show $ averageNumberOfConnections users friendMap, "\n"]
+    printd "Average number of connections:" $ averageNumberOfConnections users friendMap
 
-    putStrLn $ concat ["Users sorted by number of friends:\n", show $ usersByNumberOfFriends users friendMap, "\n"]
-    putStrLn $ concat ["Mutual friends of Chi (id = 3):\n", show $ mutualFriends friendMap 3, "\n"]
+    printd "Users sorted by number of friends:" $ usersByNumberOfFriends users friendMap
+    printd "Mutual friends of Chi (id = 3):" $ mutualFriends friendMap 3
 
-    putStrLn $ concat ["Data scientists who like Java:\n", show $ M.findWithDefault [] (T.pack "Java") userIdsByInterest, "\n"]
+    printd "Data scientists who like Java:" $ M.findWithDefault [] (T.pack "Java") userIdsByInterest
 
 
 type UserId = Int
@@ -55,9 +56,9 @@ parseInterest (userId:interest:_) = (textToInt userId, interest)
 -- Explicitly creates backward edges in a non-directional graph
 -- e.g. [(0, 1), (1, 3)] -> [(0, 1), (1, 0), (1, 3), (3, 1)]
 -- Precondition: a graph must not already contain both forward and backward edges
-makeSymmetricEdges :: [(UserId, FriendId)] -> [(UserId, FriendId)]
-makeSymmetricEdges [] = []
-makeSymmetricEdges ((from, to):xs) = (from, to):(to, from):(makeSymmetricEdges xs)
+mirrorEdges :: [(UserId, FriendId)] -> [(UserId, FriendId)]
+mirrorEdges [] = []
+mirrorEdges ((from,to):xs) = (from,to):(to,from):(mirrorEdges xs)
 
 friends :: M.Map UserId [FriendId] -> UserId -> [FriendId]
 friends friendMap userId = M.findWithDefault [] userId friendMap
@@ -85,4 +86,3 @@ mutualFriends friendMap targetUserId = counter $ filter notMeNorMyFriend friends
         friendsOfMyFriends = concat [friends friendMap f | f <- myFriends]
         notMeNorMyFriend userId = not ((userId `elem` myFriends) || (userId == targetUserId))
         myFriends = friends friendMap targetUserId
-
